@@ -15,6 +15,11 @@ package org.openhab.binding.dooyacurtains.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -48,6 +53,8 @@ public class DooyaCurtainsRS485BridgeHandler extends BaseBridgeHandler implement
     private @Nullable SerialPort serialPort;
     private @Nullable InputStream inputStream;
     private @Nullable OutputStream outputStream;
+    private @Nullable ScheduledFuture<?> pollingTask;
+    public List<DooyaCurtainsPooler> requestsList = new ArrayList<>();
 
     public DooyaCurtainsRS485BridgeHandler(Bridge thing, SerialPortManager serialPortManager) {
         super(thing);
@@ -72,6 +79,20 @@ public class DooyaCurtainsRS485BridgeHandler extends BaseBridgeHandler implement
 
         }
         scheduler.execute(this::connect);
+        pollingTask = scheduler.scheduleWithFixedDelay(this::poll, 0, 1, TimeUnit.SECONDS);
+    }
+
+    private void poll() {
+        Iterator<DooyaCurtainsPooler> iterator = requestsList.iterator();
+        while (iterator.hasNext()) {
+            DooyaCurtainsPooler dooyaCurtainsPooler = iterator.next();
+            DooyaCurtainsHandler handler = dooyaCurtainsPooler.dooyaCurtainsHandler;
+            if (handler != null) {
+                byte[] answer = send(dooyaCurtainsPooler.request, dooyaCurtainsPooler.request.length + 2);
+                handler.response(answer, dooyaCurtainsPooler.channel);
+            }
+            iterator.remove();
+        }
     }
 
     private synchronized void connect() {
@@ -216,6 +237,10 @@ public class DooyaCurtainsRS485BridgeHandler extends BaseBridgeHandler implement
     @Override
     public void dispose() {
         logger.debug("Disposing...");
+        ScheduledFuture<?> pollingTask = this.pollingTask;
+        if (pollingTask != null) {
+            pollingTask.cancel(true);
+        }
         disconnect();
         super.dispose();
     }

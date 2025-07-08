@@ -23,8 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.core.library.types.PercentType;
-import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
@@ -189,12 +187,12 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
                     reconnect++;
                 }
                 var status = bridgeHandler.send(data, 8);
-                if (status[0] == 0x55) {
-                    updateStatus(ThingStatus.ONLINE);
-                    pollingTask = scheduler.scheduleWithFixedDelay(this::poll, 0, 100, TimeUnit.MILLISECONDS);
-                } else {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
-                }
+                // if (status[0] == 0x55) {
+                updateStatus(ThingStatus.ONLINE);
+                pollingTask = scheduler.scheduleWithFixedDelay(this::poll, 0, 10, TimeUnit.SECONDS);
+                // } else {
+                // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+                // }
             }
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
@@ -207,57 +205,79 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
             for (Channel channel : getThing().getChannels()) {
                 if (isLinked(channel.getUID().getId())) {
                     if (channel.getUID().getId().equals(POSITION)) {
-                        byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x02, 0x01 };
-                        byte[] answer = bridgeHandler.send(data, 8);
-                        if (!String.format("%02X", answer[5]).equals("FF")) {
-                            logger.debug("Position is: {}", answer[5]);
-                            try {
-                                updateState(channel.getUID(), PercentType.valueOf(String.valueOf(answer[5])));
-                            } catch (Exception ignored) {
-                                logger.debug("Errror position is: {}", answer[5]);
-                            }
 
-                        } else {
-                            StringBuilder sbl = new StringBuilder(answer.length * 2);
-                            for (byte b : answer)
-                                sbl.append(String.format("%02X ", b));
-                            logger.debug("Device does not set limits. Answer is: {}", sbl);
-                        }
+                        DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
+                        pooler.dooyaCurtainsHandler = this;
+                        pooler.channel = POSITION;
+                        pooler.request = new byte[] { 0x55, address[0], address[1], 0x01, 0x02, 0x01 };
+                        assert bridgeHandler.requestsList != null;
+                        bridgeHandler.requestsList.add(pooler);
+
+                        // byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x02, 0x01 };
+                        // byte[] answer = bridgeHandler.send(data, 8);
+                        // if (address[0] == answer[1] && address[1] == answer[2]) {
+                        // if (!String.format("%02X", answer[5]).equals("FF")) {
+                        // logger.debug("Position is: {}", answer[5]);
+                        // try {
+                        // updateState(channel.getUID(), PercentType.valueOf(String.valueOf(answer[5])));
+                        // } catch (Exception ignored) {
+                        // logger.debug("Errror position is: {}", answer[5]);
+                        // }
+                        //
+                        // } else {
+                        // StringBuilder sbl = new StringBuilder(answer.length * 2);
+                        // for (byte b : answer)
+                        // sbl.append(String.format("%02X ", b));
+                        // logger.debug("Device does not set limits. Answer is: {}", sbl);
+                        // }
+                        // }
                     }
                     if (channel.getUID().getId().equals(STATE)) {
-                        byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x05, 0x01 };
-                        byte[] answer = bridgeHandler.send(data, 8);
-                        if (!String.format("%02X", answer[5]).equals("FF") && answer[0] == 0x55) {
-                            if (answer[5] == 0) {
-                                logger.debug("Device state is: STOP");
-                                updateState(channel.getUID(), StringType.valueOf("STOP"));
-                            }
-                            if (answer[5] == 1) {
-                                logger.debug("Device state is: OPEN");
-                                updateState(channel.getUID(), StringType.valueOf("OPEN"));
-                            }
-                            if (answer[5] == 2) {
-                                logger.debug("Device state is: CLOSE");
-                                updateState(channel.getUID(), StringType.valueOf("CLOSE"));
-                            }
-                        } else {
-                            StringBuilder sbl = new StringBuilder(answer.length * 2);
-                            for (byte b : answer)
-                                sbl.append(String.format("%02X ", b));
-                            logger.debug("Device state is: {}", sbl);
-                        }
+
+                        DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
+                        pooler.dooyaCurtainsHandler = this;
+                        pooler.channel = STATE;
+                        pooler.request = new byte[] { 0x55, address[0], address[1], 0x01, 0x05, 0x01 };
+                        assert bridgeHandler.requestsList != null;
+                        bridgeHandler.requestsList.add(pooler);
+
+                        // byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x05, 0x01 };
+                        // byte[] answer = bridgeHandler.send(data, 8);
+                        // if (address[0] == answer[1] && address[1] == answer[2]) {
+                        // if (!String.format("%02X", answer[5]).equals("FF") && answer[0] == 0x55) {
+                        // if (answer[5] == 0) {
+                        // logger.debug("Device state is: STOP");
+                        // updateState(channel.getUID(), StringType.valueOf("STOP"));
+                        // }
+                        // if (answer[5] == 1) {
+                        // logger.debug("Device state is: OPEN");
+                        // updateState(channel.getUID(), StringType.valueOf("OPEN"));
+                        // }
+                        // if (answer[5] == 2) {
+                        // logger.debug("Device state is: CLOSE");
+                        // updateState(channel.getUID(), StringType.valueOf("CLOSE"));
+                        // }
+                        // } else {
+                        // StringBuilder sbl = new StringBuilder(answer.length * 2);
+                        // for (byte b : answer)
+                        // sbl.append(String.format("%02X ", b));
+                        // logger.debug("Device state is: {}", sbl);
+                        // }
+                        // }
                     }
                     if (channel.getUID().getId().equals(INVERTED)) {
-                        byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x03, 0x01 };
-                        byte[] answer = bridgeHandler.send(data, 8);
-                        if (answer[5] == 0 && answer[0] == 0x55) {
-                            logger.debug("Device state is: DIRECT");
-                            updateState(channel.getUID(), StringType.valueOf("DIRECT"));
-                        }
-                        if (answer[5] == 1) {
-                            logger.debug("Device state is: REVERSE");
-                            updateState(channel.getUID(), StringType.valueOf("REVERSE"));
-                        }
+                        // byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x03, 0x01 };
+                        // byte[] answer = bridgeHandler.send(data, 8);
+                        // if (address[0] == answer[1] && address[1] == answer[2]) {
+                        // if (answer[5] == 0 && answer[0] == 0x55) {
+                        // logger.debug("Device state is: DIRECT");
+                        // updateState(channel.getUID(), StringType.valueOf("DIRECT"));
+                        // }
+                        // if (answer[5] == 1) {
+                        // logger.debug("Device state is: REVERSE");
+                        // updateState(channel.getUID(), StringType.valueOf("REVERSE"));
+                        // }
+                        // }
                     }
                 }
             }
@@ -280,8 +300,14 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
         if (refreshPollingJob != null && !refreshPollingJob.isCancelled()) {
             refreshPollingJob.cancel(true);
         }
-        // this.pollingTask = refreshPollingJob;
         this.pollingTask = null;
         super.dispose();
+    }
+
+    public void response(byte[] data, String channel) {
+        StringBuilder sbl = new StringBuilder(data.length * 2);
+        for (byte b : data)
+            sbl.append(String.format("%02X ", b));
+        logger.debug("Response {}, data {}", channel, sbl);
     }
 }
