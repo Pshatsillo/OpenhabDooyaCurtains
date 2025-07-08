@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="dooyacurtains"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<thing-type id="curtain">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="rs485"/>
+		</supported-bridge-type-refs>
+
+		<label>Curtain motor Thing</label>
+		<description>Thing for Dooya Curtain motor</description>
+
+		<channels>
+			<channel id="position" typeId="positionChannel"/>
+			<channel id="state" typeId="stateChannel"/>
+			<channel id="inverted" typeId="invertChannel"/>
+		</channels>
+
+		<config-description>
+			<parameter name="address" type="text">
+				<label>Curtain address</label>
+				<default>FEFE</default>
+			</parameter>
+		</config-description>
+
+	</thing-type>
+
+	<channel-type id="positionChannel">
+		<item-type>Dimmer</item-type>
+		<label>Curtain position</label>
+		<description>Channel for indicate and set curtain position</description>
+	</channel-type>
+	<channel-type id="stateChannel">
+		<item-type>String</item-type>
+		<label>Curtain state</label>
+		<description>Channel for indicate and set curtain state</description>
+		<state>
+			<options>
+				<option value="STOP">STOP</option>
+				<option value="OPEN">OPEN</option>
+				<option value="CLOSE">CLOSE</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="invertChannel">
+		<item-type>String</item-type>
+		<label>Curtain direction</label>
+		<description>Channel for indicate and set curtain direction</description>
+		<state>
+			<options>
+				<option value="DIRECT">DIRECT</option>
+				<option value="REVERSE">REVERSE</option>
+			</options>
+		</state>
+	</channel-type>
+
+</thing:thing-descriptions>
