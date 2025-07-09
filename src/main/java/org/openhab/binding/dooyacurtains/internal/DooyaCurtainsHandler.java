@@ -16,13 +16,16 @@ import static org.openhab.binding.dooyacurtains.internal.DooyaCurtainsBindingCon
 import static org.openhab.binding.dooyacurtains.internal.DooyaCurtainsBindingConstants.POSITION;
 import static org.openhab.binding.dooyacurtains.internal.DooyaCurtainsBindingConstants.STATE;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.core.library.types.PercentType;
+import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
@@ -65,76 +68,105 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
             if (bridgeHandler != null) {
                 if (POSITION.equals(channelUID.getId())) {
                     logger.debug("Command Position");
-                    int counter = 0;
-                    byte[] data = new byte[] { 0x55, address[0], address[1], 0x03, 0x04,
+
+                    DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
+                    pooler.dooyaCurtainsHandler = this;
+                    pooler.channel = getThing().getChannel(channelUID.getId());
+                    pooler.request = new byte[] { 0x55, address[0], address[1], 0x03, 0x04,
                             Byte.parseByte(command.toString()) };
-                    byte[] status = new byte[6];
-                    while (!Arrays.equals(status, data)) {
-                        if (counter > 5) {
-                            logger.debug("Can not send command Position");
-                            break;
-                        }
-                        System.arraycopy(bridgeHandler.send(data, 8), 0, status, 0, 6);
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ignored) {
-                        }
-                        counter++;
-                    }
+                    bridgeHandler.requestsList.add(pooler);
+
+                    // int counter = 0;
+                    // byte[] data = new byte[] { 0x55, address[0], address[1], 0x03, 0x04,
+                    // Byte.parseByte(command.toString()) };
+                    // byte[] status = new byte[6];
+                    // while (!Arrays.equals(status, data)) {
+                    // if (counter > 5) {
+                    // logger.debug("Can not send command Position");
+                    // break;
+                    // }
+                    // System.arraycopy(bridgeHandler.send(data, 8), 0, status, 0, 6);
+                    // try {
+                    // Thread.sleep(100);
+                    // } catch (InterruptedException ignored) {
+                    // }
+                    // counter++;
+                    // }
                 } else if (STATE.equals(channelUID.getId())) {
                     if (command.toString().equals("OPEN")) {
                         logger.debug("Command OPEN");
-                        int counter = 0;
-                        byte[] data = new byte[] { 0x55, address[0], address[1], 0x03, 0x01 };
-                        byte[] status = new byte[5];
-                        while (!Arrays.equals(status, data)) {
-                            if (counter > 5) {
-                                logger.debug("Can not send command OPEN");
-                                break;
-                            }
-                            System.arraycopy(bridgeHandler.send(data, 7), 0, status, 0, 5);
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException ignored) {
-                            }
-                            counter++;
-                        }
+
+                        DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
+                        pooler.dooyaCurtainsHandler = this;
+                        pooler.channel = getThing().getChannel(channelUID.getId());
+                        pooler.request = new byte[] { 0x55, address[0], address[1], 0x03, 0x01 };
+                        bridgeHandler.requestsList.add(pooler);
+
+                        // int counter = 0;
+                        // byte[] data = new byte[] { 0x55, address[0], address[1], 0x03, 0x01 };
+                        // byte[] status = new byte[5];
+                        // while (!Arrays.equals(status, data)) {
+                        // if (counter > 5) {
+                        // logger.debug("Can not send command OPEN");
+                        // break;
+                        // }
+                        // System.arraycopy(bridgeHandler.send(data, 7), 0, status, 0, 5);
+                        // try {
+                        // Thread.sleep(100);
+                        // } catch (InterruptedException ignored) {
+                        // }
+                        // counter++;
+                        // }
                     }
                     if (command.toString().equals("CLOSE")) {
                         logger.debug("Command CLOSE");
-                        byte[] data = new byte[] { 0x55, address[0], address[1], 0x03, 0x02 };
-                        byte[] status = new byte[5];
-                        int counter = 0;
-                        while (!Arrays.equals(status, data)) {
-                            if (counter > 5) {
-                                logger.debug("Can not send command CLOSE");
-                                break;
-                            }
-                            System.arraycopy(bridgeHandler.send(data, 7), 0, status, 0, 5);
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException ignored) {
-                            }
-                            counter++;
-                        }
+
+                        DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
+                        pooler.dooyaCurtainsHandler = this;
+                        pooler.channel = getThing().getChannel(channelUID.getId());
+                        pooler.request = new byte[] { 0x55, address[0], address[1], 0x03, 0x02 };
+                        bridgeHandler.requestsList.add(pooler);
+
+                        // byte[] data = new byte[] { 0x55, address[0], address[1], 0x03, 0x02 };
+                        // byte[] status = new byte[5];
+                        // int counter = 0;
+                        // while (!Arrays.equals(status, data)) {
+                        // if (counter > 5) {
+                        // logger.debug("Can not send command CLOSE");
+                        // break;
+                        // }
+                        // System.arraycopy(bridgeHandler.send(data, 7), 0, status, 0, 5);
+                        // try {
+                        // Thread.sleep(100);
+                        // } catch (InterruptedException ignored) {
+                        // }
+                        // counter++;
+                        // }
                     }
                     if (command.toString().equals("STOP")) {
                         logger.debug("Command STOP");
-                        byte[] data = new byte[] { 0x55, address[0], address[1], 0x03, 0x03 };
-                        byte[] status = new byte[5];
-                        int counter = 0;
-                        while (!Arrays.equals(status, data)) {
-                            if (counter > 5) {
-                                logger.debug("Can not send command STOP");
-                                break;
-                            }
-                            System.arraycopy(bridgeHandler.send(data, 7), 0, status, 0, 5);
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException ignored) {
-                            }
-                            counter++;
-                        }
+
+                        DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
+                        pooler.dooyaCurtainsHandler = this;
+                        pooler.channel = getThing().getChannel(channelUID.getId());
+                        pooler.request = new byte[] { 0x55, address[0], address[1], 0x03, 0x03 };
+                        bridgeHandler.requestsList.add(pooler);
+
+                        // byte[] data = new byte[] { 0x55, address[0], address[1], 0x03, 0x03 };
+                        // byte[] status = new byte[5];
+                        // int counter = 0;
+                        // while (!Arrays.equals(status, data)) {
+                        // if (counter > 5) {
+                        // logger.debug("Can not send command STOP");
+                        // break;
+                        // }
+                        // System.arraycopy(bridgeHandler.send(data, 7), 0, status, 0, 5);
+                        // try {
+                        // Thread.sleep(100);
+                        // } catch (InterruptedException ignored) {
+                        // }
+                        // counter++;
+                        // }
                     }
                 } else if (INVERTED.equals(channelUID.getId())) {
                     logger.debug("Command {}", command);
@@ -142,21 +174,32 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
                     if (command.toString().equals("REVERSE")) {
                         direction = 1;
                     }
-                    byte[] data = new byte[] { 0x55, address[0], address[1], 0x02, 0x03, 0x01, (byte) direction };
-                    byte[] status = new byte[7];
-                    int counter = 0;
-                    while (!Arrays.equals(status, data)) {
-                        if (counter > 5) {
-                            logger.debug("Can not send command INVERTED");
-                            break;
-                        }
-                        System.arraycopy(bridgeHandler.send(data, 9), 0, status, 0, 7);
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ignored) {
-                        }
-                        counter++;
-                    }
+
+                    DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
+                    pooler.dooyaCurtainsHandler = this;
+                    pooler.channel = getThing().getChannel(channelUID.getId());
+                    pooler.request = new byte[] { 0x55, address[0], address[1], 0x02, 0x03, 0x01, (byte) direction };
+                    bridgeHandler.requestsList.add(pooler);
+
+                    // int direction = 0;
+                    // if (command.toString().equals("REVERSE")) {
+                    // direction = 1;
+                    // }
+                    // byte[] data = new byte[] { 0x55, address[0], address[1], 0x02, 0x03, 0x01, (byte) direction };
+                    // byte[] status = new byte[7];
+                    // int counter = 0;
+                    // while (!Arrays.equals(status, data)) {
+                    // if (counter > 5) {
+                    // logger.debug("Can not send command INVERTED");
+                    // break;
+                    // }
+                    // System.arraycopy(bridgeHandler.send(data, 9), 0, status, 0, 7);
+                    // try {
+                    // Thread.sleep(100);
+                    // } catch (InterruptedException ignored) {
+                    // }
+                    // counter++;
+                    // }
                 }
             }
         }
@@ -171,7 +214,7 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
             DooyaCurtainsConfiguration config = this.config;
             if (config != null) {
                 address = HexFormat.of().parseHex(config.address);
-                byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x02, 0x01 };
+                byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, (byte) 0xFE, 0x01 };
                 int reconnect = 0;
                 while (!bridgeHandler.getThing().getStatus().equals(ThingStatus.ONLINE)) {
                     try {
@@ -187,9 +230,12 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
                     reconnect++;
                 }
                 var status = bridgeHandler.send(data, 8);
+                Map<String, String> properties = new HashMap<>();
+                properties.put("Protocol version:", String.valueOf(status[5] & 0xFF));
+                updateProperties(properties);
                 // if (status[0] == 0x55) {
                 updateStatus(ThingStatus.ONLINE);
-                pollingTask = scheduler.scheduleWithFixedDelay(this::poll, 0, 10, TimeUnit.SECONDS);
+                pollingTask = scheduler.scheduleWithFixedDelay(this::poll, 0, 2, TimeUnit.SECONDS);
                 // } else {
                 // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
                 // }
@@ -208,9 +254,8 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
 
                         DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
                         pooler.dooyaCurtainsHandler = this;
-                        pooler.channel = POSITION;
+                        pooler.channel = channel;
                         pooler.request = new byte[] { 0x55, address[0], address[1], 0x01, 0x02, 0x01 };
-                        assert bridgeHandler.requestsList != null;
                         bridgeHandler.requestsList.add(pooler);
 
                         // byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x02, 0x01 };
@@ -236,9 +281,8 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
 
                         DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
                         pooler.dooyaCurtainsHandler = this;
-                        pooler.channel = STATE;
+                        pooler.channel = channel;
                         pooler.request = new byte[] { 0x55, address[0], address[1], 0x01, 0x05, 0x01 };
-                        assert bridgeHandler.requestsList != null;
                         bridgeHandler.requestsList.add(pooler);
 
                         // byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x05, 0x01 };
@@ -266,6 +310,11 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
                         // }
                     }
                     if (channel.getUID().getId().equals(INVERTED)) {
+                        DooyaCurtainsPooler pooler = new DooyaCurtainsPooler();
+                        pooler.dooyaCurtainsHandler = this;
+                        pooler.channel = channel;
+                        pooler.request = new byte[] { 0x55, address[0], address[1], 0x01, 0x03, 0x01 };
+                        bridgeHandler.requestsList.add(pooler);
                         // byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, 0x03, 0x01 };
                         // byte[] answer = bridgeHandler.send(data, 8);
                         // if (address[0] == answer[1] && address[1] == answer[2]) {
@@ -304,10 +353,48 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
         super.dispose();
     }
 
-    public void response(byte[] data, String channel) {
+    public void response(byte[] data, @Nullable Channel channel) {
         StringBuilder sbl = new StringBuilder(data.length * 2);
         for (byte b : data)
             sbl.append(String.format("%02X ", b));
-        logger.debug("Response {}, data {}", channel, sbl);
+        logger.debug("Response {}, data {}", channel != null ? channel.getUID() : null, sbl);
+        if (channel != null && channel.getUID().getId().equals(POSITION)) {
+            if (!String.format("%02X", data[5]).equals("FF")) {
+                logger.debug("Position is: {}", data[5]);
+                try {
+                    updateState(channel.getUID(), PercentType.valueOf(String.valueOf(data[5])));
+                } catch (Exception ignored) {
+                    logger.debug("Errror position is: {}", data[5]);
+                }
+            }
+        }
+        if (channel != null && channel.getUID().getId().equals(STATE)) {
+            if (data[5] == 0) {
+                logger.debug("Device state is: STOP");
+                updateState(channel.getUID(), StringType.valueOf("STOP"));
+            }
+            if (data[5] == 1) {
+                logger.debug("Device state is: OPEN");
+                updateState(channel.getUID(), StringType.valueOf("OPEN"));
+            }
+            if (data[5] == 2) {
+                logger.debug("Device state is: CLOSE");
+                updateState(channel.getUID(), StringType.valueOf("CLOSE"));
+            }
+            if (data[5] == 3) {
+                logger.debug("Device state is: PROGRAM");
+                updateState(channel.getUID(), StringType.valueOf("PROGRAM"));
+            }
+        }
+        if (channel != null && channel.getUID().getId().equals(INVERTED)) {
+            if (data[5] == 0) {
+                logger.debug("Device state is: DIRECT");
+                updateState(channel.getUID(), StringType.valueOf("DIRECT"));
+            }
+            if (data[5] == 1) {
+                logger.debug("Device state is: REVERSE");
+                updateState(channel.getUID(), StringType.valueOf("REVERSE"));
+            }
+        }
     }
 }

@@ -79,19 +79,24 @@ public class DooyaCurtainsRS485BridgeHandler extends BaseBridgeHandler implement
 
         }
         scheduler.execute(this::connect);
-        pollingTask = scheduler.scheduleWithFixedDelay(this::poll, 0, 1, TimeUnit.SECONDS);
+        pollingTask = scheduler.scheduleWithFixedDelay(this::poll, 0, 500, TimeUnit.MILLISECONDS);
     }
 
     private void poll() {
         Iterator<DooyaCurtainsPooler> iterator = requestsList.iterator();
-        while (iterator.hasNext()) {
-            DooyaCurtainsPooler dooyaCurtainsPooler = iterator.next();
-            DooyaCurtainsHandler handler = dooyaCurtainsPooler.dooyaCurtainsHandler;
-            if (handler != null) {
-                byte[] answer = send(dooyaCurtainsPooler.request, dooyaCurtainsPooler.request.length + 2);
-                handler.response(answer, dooyaCurtainsPooler.channel);
+        try {
+            while (iterator.hasNext()) {
+                DooyaCurtainsPooler dooyaCurtainsPooler = iterator.next();
+                DooyaCurtainsHandler handler = dooyaCurtainsPooler.dooyaCurtainsHandler;
+                if ((handler != null) && (dooyaCurtainsPooler.channel != null)) {
+                    byte[] answer = send(dooyaCurtainsPooler.request, dooyaCurtainsPooler.request.length + 2);
+                    handler.response(answer, dooyaCurtainsPooler.channel);
+                }
+                iterator.remove();
+                // Thread.sleep(100);
             }
-            iterator.remove();
+        } catch (Exception e) {
+            logger.error("Polling error {}", e.getMessage());
         }
     }
 

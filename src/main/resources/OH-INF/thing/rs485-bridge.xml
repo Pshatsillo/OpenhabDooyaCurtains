@@ -16,5 +16,7 @@
 				<description>Input com-port name</description>
 			</parameter>
 		</config-description>
+
 	</bridge-type>
+
 </thing:thing-descriptions>
