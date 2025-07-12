@@ -50,7 +50,6 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(DooyaCurtainsHandler.class);
     @Nullable
     DooyaCurtainsRS485BridgeHandler bridgeHandler;
-    private @Nullable DooyaCurtainsConfiguration config;
     private @Nullable ScheduledFuture<?> pollingTask;
     byte[] address = new byte[2];
 
@@ -62,7 +61,7 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
         // logger.debug("Command {}", command);
         if (command instanceof RefreshType) {
-
+            logger.debug("Refreshing Dooya curtains");
         } else {
             DooyaCurtainsRS485BridgeHandler bridgeHandler = this.bridgeHandler;
             if (bridgeHandler != null) {
@@ -207,38 +206,36 @@ public class DooyaCurtainsHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        config = getConfigAs(DooyaCurtainsConfiguration.class);
+        // @Nullable DooyaCurtainsConfiguration config1 = getConfigAs(DooyaCurtainsConfiguration.class);
         bridgeHandler = getBridgeHandler();
         DooyaCurtainsRS485BridgeHandler bridgeHandler = this.bridgeHandler;
         if (bridgeHandler != null) {
-            DooyaCurtainsConfiguration config = this.config;
-            if (config != null) {
-                address = HexFormat.of().parseHex(config.address);
-                byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, (byte) 0xFE, 0x01 };
-                int reconnect = 0;
-                while (!bridgeHandler.getThing().getStatus().equals(ThingStatus.ONLINE)) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ignored) {
-                    }
-                    if (reconnect == 10) {
-                        logger.error("Bridge is offline during 10 seconds");
-                        updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.BRIDGE_UNINITIALIZED,
-                                "Bridge is offline during 10 seconds");
-                        break;
-                    }
-                    reconnect++;
+            DooyaCurtainsConfiguration config = getConfigAs(DooyaCurtainsConfiguration.class);
+            address = HexFormat.of().parseHex(config.address);
+            byte[] data = new byte[] { 0x55, address[0], address[1], 0x01, (byte) 0xFE, 0x01 };
+            int reconnect = 0;
+            while (!bridgeHandler.getThing().getStatus().equals(ThingStatus.ONLINE)) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) {
                 }
-                var status = bridgeHandler.send(data, 8);
-                Map<String, String> properties = new HashMap<>();
-                properties.put("Protocol version:", String.valueOf(status[5] & 0xFF));
-                updateProperties(properties);
-                // if (status[0] == 0x55) {
+                if (reconnect == 10) {
+                    logger.error("Bridge is offline during 10 seconds");
+                    updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.BRIDGE_UNINITIALIZED,
+                            "Bridge is offline during 10 seconds");
+                    break;
+                }
+                reconnect++;
+            }
+            var status = bridgeHandler.send(data, 8);
+            Map<String, String> properties = new HashMap<>();
+            properties.put("Protocol version:", String.valueOf(status[5] & 0xFF));
+            updateProperties(properties);
+            if (status[0] == 0x55) {
                 updateStatus(ThingStatus.ONLINE);
                 pollingTask = scheduler.scheduleWithFixedDelay(this::poll, 0, 2, TimeUnit.SECONDS);
-                // } else {
-                // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
-                // }
+            } else {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
             }
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);

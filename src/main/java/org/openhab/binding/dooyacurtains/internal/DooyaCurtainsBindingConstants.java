@@ -24,7 +24,7 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class DooyaCurtainsBindingConstants {
 
-    private static final String BINDING_ID = "dooyacurtains";
+    public static final String BINDING_ID = "dooyacurtains";
 
     // List of all Thing Type UIDs
     public static final ThingTypeUID CURTAIN_THING = new ThingTypeUID(BINDING_ID, "curtain");
@@ -34,4 +34,9 @@ public class DooyaCurtainsBindingConstants {
     public static final String POSITION = "position";
     public static final String STATE = "state";
     public static final String INVERTED = "inverted";
+
+    ///
+    public static final String PROGRAM_SWITCH = "setaddress";
+    // public static final String PROGRAM_ADDRESS = "address";
+    // public static final String PROGRAM_STATUS = "status";
 }

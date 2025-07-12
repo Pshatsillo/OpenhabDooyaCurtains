@@ -8,7 +8,6 @@
 
 		<label>Bridge for rs485 serial connector</label>
 		<description>Bridge for establishing connection between curtain motor and openhab</description>
-
 		<config-description>
 			<parameter name="serialPort" type="text" required="true">
 				<context>serial-port</context>
@@ -16,7 +15,25 @@
 				<description>Input com-port name</description>
 			</parameter>
 		</config-description>
-
 	</bridge-type>
-
+	<channel-type id="setaddress">
+		<item-type>Switch</item-type>
+		<label>Program address</label>
+		<config-description>
+			<parameter name="Address" type="text" required="true">
+				<default>FEFE</default>
+				<label>Address</label>
+			</parameter>
+		</config-description>
+	</channel-type>
+	<channel-type id="address">
+		<item-type>String</item-type>
+		<label>Set address</label>
+		<state pattern="%s"/>
+	</channel-type>
+	<channel-type id="status">
+		<item-type>String</item-type>
+		<label>Program status</label>
+		<state pattern="%s"/>
+	</channel-type>
 </thing:thing-descriptions>
